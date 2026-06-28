@@ -5,11 +5,13 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.api.routes.main import api_router
+from app.core.db import engine
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     yield
+    await engine.dispose()
 
 
 app = FastAPI(lifespan=lifespan)
