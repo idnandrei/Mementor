@@ -1,30 +1,31 @@
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import SessionDep
 from app.core.config import settings
-from app.core.db import Base, engine
+from app.core.db import engine
+from app.core.security import hash_password
 from app.models import User
 
 
-def create_first_superuser(session: Session) -> None:
-    query = select(User).where(User.email == settings.FIRST_SUPERUSER_EMAIL)
-    existing_user = session.scalar(query)
+async def create_first_superuser(session: AsyncSession) -> None:
+    stmt = select(User).where(User.email == settings.FIRST_SUPERUSER_EMAIL)
+    existing_user = await session.scalar(stmt)
 
     if existing_user:
         return
 
     superuser = User(
         username=settings.FIRST_SUPERUSER_USERNAME,
-        email=str(settings.FIRST_SUPERUSER_EMAIL),
-        hashed_password=settings.FIRST_SUPERUSER_PASSWORD,
+        email=str(settings.FIRST_SUPERUSER_EMAIL).lower(),
+        hashed_password=hash_password(settings.FIRST_SUPERUSER_PASSWORD),
         is_superuser=True,
     )
 
     session.add(superuser)
-    session.commit()
+    await session.commit()
 
 
-def init_db() -> None:
-
-    with Session(engine) as session:
-        create_first_superuser(session)
+async def init_db() -> None:
+    async with AsyncSession(engine) as session:
+        await create_first_superuser(session)

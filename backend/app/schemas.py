@@ -4,6 +4,15 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class TokenPayload(BaseModel):
+    sub: str
+
+
 class UserBase(BaseModel):
     username: str = Field(min_length=1, max_length=50)
     email: EmailStr = Field(max_length=255)
