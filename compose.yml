@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD?variable not set}
       POSTGRES_PORT: ${POSTGRES_PORT?variable not set}
     ports:
-      - ":${POSTGRES_PORT}:5432"
+      - ":${POSTGRES_HOST_PORT}:5432"
     volumes:
       - app-db-data:/var/lib/postgresql/data/pgdata
     healthcheck:
@@ -17,5 +17,42 @@ services:
       timeout: 5s
       retries: 5
 
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: app_backend
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - backend_venv:/app/.venv
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: app_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+
+    depends_on:
+      - backend
+
+    command: npm run dev -- --hostname 0.0.0.0
+
 volumes:
   app-db-data:
+  backend_venv:
+  frontend_node_modules:
