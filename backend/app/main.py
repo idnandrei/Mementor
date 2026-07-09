@@ -22,11 +22,6 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(api_router, prefix="/api")
 
 
-@app.get("/")
-async def hello_word():
-    return {"Idan": "Paguio"}
-
-
 # @app.get("/health/db")
 # def database_health(db: Session = Depends(get_db)):
 #     db.execute(text("SELECT 1"))
