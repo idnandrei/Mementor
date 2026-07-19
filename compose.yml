@@ -10,12 +10,23 @@ services:
     ports:
       - ":${POSTGRES_HOST_PORT}:5432"
     volumes:
-      - app-db-data:/var/lib/postgresql/data/pgdata
+      - app-db-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
+
+  prestart:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: bash scripts/prestart.sh
+    env_file:
+      - .env
 
   backend:
     build:
@@ -30,8 +41,8 @@ services:
       - ./backend:/app
       - backend_venv:/app/.venv
     depends_on:
-      postgres:
-        condition: service_healthy
+      prestart:
+        condition: service_completed_successfully
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
@@ -50,7 +61,7 @@ services:
     depends_on:
       - backend
 
-    command: npm run dev -- --hostname 0.0.0.0
+    command: bun run dev -- --hostname 0.0.0.0
 
 volumes:
   app-db-data:

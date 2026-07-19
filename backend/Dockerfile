@@ -11,6 +11,9 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
 COPY app ./app
+COPY scripts ./scripts
+COPY alembic.ini ./
+COPY alembic ./alembic
 
 
 FROM python:3.13-slim AS runtime
@@ -21,9 +24,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-RUN addgroup --system web && adduser --system --ingroup web web
+RUN addgroup --system web \
+    && adduser --system --ingroup web web
 
-COPY --from=builder --chown=app:app /app /app
+COPY --from=builder --chown=web:web /app /app
 
 USER web
 
