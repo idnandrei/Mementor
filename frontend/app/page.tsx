@@ -1,5 +1,5 @@
-import { LoginCard } from "./_components/LoginCard";
+const library = () => {
+  return <div className="bg-background text-2xl text-foreground">This is from lib</div>;
+};
 
-export default function Home() {
-  return <LoginCard />;
-}
+export default library;

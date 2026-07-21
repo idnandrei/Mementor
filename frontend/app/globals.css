@@ -7,9 +7,9 @@
   --muted-foreground: oklch(0.554 0.046 257.4);
   --heading-muted: oklch(0.446 0.043 257.3);
   --border: oklch(0.929 0.013 255.5);
-  --accent: oklch(0.785 0.02 155);
-  --accent-strong: oklch(0.48 0.025 155);
-  --accent-hover: oklch(0.43 0.025 155);
+  --accent: oklch(0.6662 0.0933 271.87);
+  --accent-strong: oklch(0.4676 0.0933 271.87);
+  --accent-hover: oklch(0.5475 0.0933 271.87);
   --on-accent: oklch(1 0 0);
   --placeholder: oklch(0.704 0.04 256.8);
   --link-hover: oklch(0.372 0.044 257.3);
