@@ -1,5 +1,5 @@
 const library = () => {
-  return <div className="text-2xl text-red-200">This is from lib</div>;
+  return <div className="bg-background text-2xl text-foreground">This is from lib</div>;
 };
 
 export default library;

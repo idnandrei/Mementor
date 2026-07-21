@@ -1,26 +1,86 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: oklch(0.984 0.003 247.9);
+  --foreground: oklch(0.208 0.04 265.8);
+  --surface: oklch(1 0 0);
+  --muted-foreground: oklch(0.554 0.046 257.4);
+  --heading-muted: oklch(0.446 0.043 257.3);
+  --border: oklch(0.929 0.013 255.5);
+  --accent: oklch(0.785 0.02 155);
+  --accent-strong: oklch(0.48 0.025 155);
+  --accent-hover: oklch(0.43 0.025 155);
+  --on-accent: oklch(1 0 0);
+  --placeholder: oklch(0.704 0.04 256.8);
+  --link-hover: oklch(0.372 0.044 257.3);
+  --focus-ring: oklch(0.785 0.02 155 / 0.28);
+  --focus-ring-strong: oklch(0.785 0.02 155 / 0.45);
+  --card-shadow: 0 22px 70px oklch(0.446 0.043 257.3 / 0.1);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-heading-muted: var(--heading-muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-hover: var(--accent-hover);
+  --color-on-accent: var(--on-accent);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-heading: var(--font-space-grotesk);
+  --shadow-card: var(--card-shadow);
+  --shadow-focus: 0 0 0 4px var(--focus-ring);
+  --shadow-focus-strong: 0 0 0 4px var(--focus-ring-strong);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+.form-label {
+  color: var(--heading-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.form-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  padding: 0.75rem 1rem;
+  color: var(--foreground);
+  font-size: 1rem;
+  outline: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.form-input::placeholder {
+  color: var(--placeholder);
+}
+
+.form-input:focus {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-focus);
+}
+
+.text-link {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+  text-underline-offset: 0.25rem;
+}
+
+.text-link:hover {
+  color: var(--link-hover);
+  text-decoration: underline;
 }

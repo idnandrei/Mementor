@@ -1,5 +1,5 @@
-import Image from "next/image";
+import { LoginCard } from "./_components/LoginCard";
 
 export default function Home() {
-  return <h1 className="text-blue-600">HOOOLA</h1>;
+  return <LoginCard />;
 }
