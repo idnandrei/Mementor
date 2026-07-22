@@ -6,6 +6,8 @@ dist/
 wheels/
 *.egg-info
 
-# Virtual environments
-.venv
+# Local environment files, at the repository root or in any subdirectory
 .env
+.env.*
+**/.env
+**/.env.*
