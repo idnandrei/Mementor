@@ -1,10 +1,12 @@
 from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.api.routes.main import api_router
+from app.core.config import settings
 from app.core.db import engine
 
 
@@ -19,6 +21,13 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(api_router, prefix="/api")
 
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.all_cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # @app.get("/health/db")
 # def database_health(db: Session = Depends(get_db)):
 #     db.execute(text("SELECT 1"))

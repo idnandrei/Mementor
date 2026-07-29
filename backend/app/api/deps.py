@@ -2,7 +2,7 @@ from collections.abc import AsyncGenerator
 from typing import Annotated
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Cookie, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from pydantic import ValidationError
@@ -14,7 +14,7 @@ from app.core.db import engine
 from app.models import User
 from app.schemas import Token, TokenPayload
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/users/token")
+# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/users/token")
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
@@ -23,9 +23,31 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 SessionDep = Annotated[AsyncSession, Depends(get_db)]
-TokenDep = Annotated[str, Depends(oauth2_scheme)]
 
 
+async def get_auth_token(
+    access_token: Annotated[
+        str | None,
+        Cookie(
+            alias=settings.AUTH_COOKIE_NAME,
+        ),
+    ] = None,
+) -> str:
+    if not access_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
+
+    return access_token
+
+
+# For bearer token
+# TokenDep = Annotated[str, Depends(oauth2_scheme)]
+TokenDep = Annotated[str, Depends(get_auth_token)]
+
+
+# for bearer token
 async def get_current_user(session: SessionDep, token: TokenDep):
     try:
         payload = jwt.decode(

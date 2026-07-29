@@ -28,3 +28,16 @@ class UserResponse(UserBase):
 
     id: uuid.UUID
     created_at: datetime
+
+
+class ErrorResponse(BaseModel):
+    detail: str
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=3, max_length=128)
+
+
+class LoginResponse(BaseModel):
+    user: UserResponse

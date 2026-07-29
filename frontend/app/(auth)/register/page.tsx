@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
-import { AuthShell } from "../../_components/auth-shell";
-import { RegisterForm } from "../../_components/register-form";
+import { AuthShell } from "@/app/components/auth-shell";
+import { RegisterForm } from "@/app/components/register-form";
 
 export const metadata: Metadata = {
   title: "Register | Mementor",

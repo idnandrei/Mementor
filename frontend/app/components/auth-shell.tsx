@@ -6,19 +6,19 @@ type AuthShellProps = {
 
 export function AuthShell({ children }: AuthShellProps) {
   return (
-    <main className="grid min-h-screen place-items-center bg-background p-5 text-foreground sm:p-8">
-      <section className="w-full max-w-md rounded-3xl border border-border bg-surface p-6 shadow-card sm:p-10">
-        <header className="mb-8 text-center">
+    <div className="grid flex-1 place-items-center bg-background p-5 text-foreground sm:p-8">
+      <section className="w-full max-w-md rounded-3xl border border-border bg-card p-6 text-card-foreground shadow-xl shadow-foreground/5 sm:p-10">
+        <div className="mb-8 text-center">
           <p className="font-heading text-5xl leading-none font-bold tracking-tighter text-foreground sm:text-6xl">
             MEMENTOR
           </p>
           <p className="mt-4 text-sm leading-6 text-muted-foreground">
             Keep your learning path organized in one place.
           </p>
-        </header>
+        </div>
 
         {children}
       </section>
-    </main>
+    </div>
   );
 }

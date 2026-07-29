@@ -2,6 +2,7 @@ from uuid import UUID
 
 from fastapi import HTTPException, status
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import SessionDep
 from app.core.security import hash_password, verify_password
@@ -17,32 +18,41 @@ async def get_all_users(*, session: SessionDep):
 
 async def get_user_by_id(*, session: SessionDep, user_id: UUID):
     user = await session.get(User, user_id)
-    print(user)
     return user
 
 
-async def get_user_by_email(*, session: SessionDep, user_email: str):
+async def get_user_by_email(*, session: SessionDep, user_email: str) -> User | None:
     stmt = select(User).where(User.email == user_email.lower())
     user = (await session.scalars(stmt)).one_or_none()
-    print(user)
     return user
 
 
-async def create_user(*, session: SessionDep, user_in: UserCreate):
-    stmt = select(User).where(func.lower(User.email) == user_in.email.lower())
-    existing = (await session.scalars(stmt)).one_or_none()
+async def get_user_by_username(
+    *,
+    session: SessionDep,
+    username: str,
+) -> User | None:
+    stmt = select(User).where(func.lower(User.username) == username.lower())
 
-    db_obj = User(
+    return (await session.scalars(stmt)).one_or_none()
+
+
+async def create_user(
+    *,
+    session: SessionDep,
+    user_in: UserCreate,
+) -> User:
+    user = User(
         username=user_in.username,
-        hashed_password=hash_password(user_in.password),
         email=str(user_in.email).lower(),
+        hashed_password=hash_password(user_in.password),
     )
 
-    session.add(db_obj)
+    session.add(user)
     await session.commit()
-    await session.refresh(db_obj)
+    await session.refresh(user)
 
-    return db_obj
+    return user
 
 
 # Dummy hash to use for timing attack prevention when user is not found

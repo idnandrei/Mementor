@@ -1,5 +1,15 @@
-from pydantic import EmailStr, SecretStr
+from typing import Annotated, Any, Literal
+
+from pydantic import AnyUrl, BeforeValidator, EmailStr, SecretStr, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def parse_cors(v: Any) -> list[str] | str:
+    if isinstance(v, str) and not v.startswith("["):
+        return [i.strip() for i in v.split(",") if i.strip()]
+    elif isinstance(v, list | str):
+        return v
+    raise ValueError(v)
 
 
 class Settings(BaseSettings):
@@ -19,10 +29,29 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER_EMAIL: EmailStr
     FIRST_SUPERUSER_PASSWORD: str
     FIRST_SUPERUSER_USERNAME: str
+    FRONTEND_HOST: str = "http://localhost:8000"
+    BACKEND_CORS_ORIGINS: Annotated[list[AnyUrl] | str, BeforeValidator(parse_cors)] = (
+        []
+    )
+    AUTH_COOKIE_NAME: str = "access_token"
+    AUTH_COOKIE_SECURE: bool = False
+    AUTH_COOKIE_DOMAIN: str | None = None
+    AUTH_COOKIE_SAMESITE: Literal[
+        "lax",
+        "strict",
+        "none",
+    ] = "lax"
 
     @property
     def DATABASE_URL(self) -> str:
         return f"postgresql+psycopg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def all_cors_origins(self) -> list[str]:
+        return [str(origin).rstrip("/") for origin in self.BACKEND_CORS_ORIGINS] + [
+            self.FRONTEND_HOST
+        ]
 
 
 settings = Settings()  # type: ignore[call-arg]
