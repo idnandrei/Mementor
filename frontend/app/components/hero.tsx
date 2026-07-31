@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Play, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/app/components/ui/button";
 
 const timestamps = [
   { time: "04:12", label: "Definition of gradient descent" },

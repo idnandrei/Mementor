@@ -33,7 +33,7 @@ export function useAuth() {
         queryKey: getCurrentUserQueryKey(),
       });
 
-      router.push("/library");
+      router.push("/home");
     },
   });
 
