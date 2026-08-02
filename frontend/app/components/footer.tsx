@@ -23,8 +23,8 @@ export function SiteFooter() {
           <div className="space-y-3">
             <SiteLogo />
             <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
-              The AI study assistant that turns lecture videos into searchable,
-              answerable knowledge.
+              Ask questions about a lecture, get answers grounded in the
+              recording, and return to the moments that matter.
             </p>
           </div>
 
@@ -50,7 +50,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-10 border-t border-border/70 pt-6 text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Lecturoo. All rights reserved.
+          &copy; {new Date().getFullYear()} Mementor. All rights reserved.
         </div>
       </div>
     </footer>

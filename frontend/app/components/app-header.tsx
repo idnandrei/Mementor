@@ -1,8 +1,9 @@
-import { Bell, Search, Upload } from "lucide-react";
+import { Bell, Search } from "lucide-react";
 
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { SidebarTrigger } from "@/app/components/ui/sidebar";
+import { UploadDialog } from "@/app/components/upload-dialog";
 
 export function AppHeader() {
   return (
@@ -23,10 +24,7 @@ export function AppHeader() {
         <Button variant="ghost" size="icon" aria-label="Notifications">
           <Bell />
         </Button>
-        <Button className="hidden sm:inline-flex">
-          <Upload data-icon="inline-start" />
-          Upload
-        </Button>
+        <UploadDialog className="hidden sm:inline-flex" />
       </div>
     </header>
   );

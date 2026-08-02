@@ -1,29 +1,28 @@
-import { Upload, Cpu, MessagesSquare, MousePointerClick } from "lucide-react";
+import { Cpu, MessagesSquare, MousePointerClick, Upload } from "lucide-react";
+
+import { Badge } from "@/app/components/ui/badge";
+import { Card, CardContent } from "@/app/components/ui/card";
 
 const steps = [
   {
     icon: Upload,
-    title: "Upload your video",
-    description:
-      "Add a university lecture, tutorial, seminar, or any recorded class to your private library.",
+    title: "Bring the lecture",
+    description: "Upload the recording you want to understand or revisit.",
   },
   {
     icon: Cpu,
-    title: "We process it",
-    description:
-      "Lecturoo analyzes the lecture and makes every concept inside it instantly queryable.",
+    title: "Mementor extracts it",
+    description: "Speech and useful visual objects are mapped to the same timeline.",
   },
   {
     icon: MessagesSquare,
-    title: "Ask your questions",
-    description:
-      "Open the video and chat with it. Get answers grounded in the lecture, with sources.",
+    title: "Ask what you mean",
+    description: "Use a natural question—not a perfectly remembered phrase.",
   },
   {
     icon: MousePointerClick,
-    title: "Jump to the answer",
-    description:
-      "Click a timestamp to jump straight to the exact section where it is discussed.",
+    title: "Read, then verify",
+    description: "Open the cited moments and watch the evidence in context.",
   },
 ];
 
@@ -34,36 +33,51 @@ export function HowItWorks() {
       className="border-b border-border/70 bg-secondary/40 py-16 lg:py-24"
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-            From upload to answer in four steps
-          </h2>
-          <p className="mt-4 text-lg leading-relaxed text-muted-foreground text-pretty">
-            No more scrubbing through hours of footage to find one explanation.
+        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-2xl">
+            <Badge variant="secondary">How it works</Badge>
+            <h2 className="mt-5 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+              From a long recording to one clear answer
+            </h2>
+          </div>
+          <p className="max-w-sm text-base leading-7 text-muted-foreground">
+            Mementor does the searching. You keep the source, the context, and
+            the final say.
           </p>
         </div>
 
-        <ol className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {steps.map((step, index) => (
-            <li
-              key={step.title}
-              className="relative rounded-xl border border-border bg-card p-6"
-            >
-              <span className="font-mono text-sm font-medium text-primary">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <span className="mt-3 flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <step.icon className="size-5" />
-              </span>
-              <h3 className="mt-4 text-base font-semibold text-card-foreground">
-                {step.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {step.description}
-              </p>
-            </li>
-          ))}
-        </ol>
+        <Card className="mt-12 overflow-hidden rounded-3xl p-0">
+          <CardContent className="p-0">
+            <ol className="grid md:grid-cols-4">
+              {steps.map((step, index) => (
+                <li
+                  key={step.title}
+                  className="group relative border-b border-border p-6 last:border-b-0 md:min-h-64 md:border-r md:border-b-0 md:last:border-r-0 lg:p-8"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                      <step.icon className="size-5" />
+                    </span>
+                    <span className="font-mono text-xs text-muted-foreground">
+                      0{index + 1}
+                    </span>
+                  </div>
+                  <h3 className="mt-10 font-heading text-lg font-semibold">
+                    {step.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                    {step.description}
+                  </p>
+                  {index < steps.length - 1 && (
+                    <span className="absolute top-1/2 -right-2.5 z-10 hidden size-5 -translate-y-1/2 items-center justify-center rounded-full border bg-card text-[10px] text-muted-foreground md:flex">
+                      →
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </CardContent>
+        </Card>
       </div>
     </section>
   );

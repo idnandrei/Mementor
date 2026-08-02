@@ -8,11 +8,11 @@ export function CtaSection() {
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="flex flex-col items-center gap-6 rounded-2xl bg-primary px-6 py-14 text-center text-primary-foreground sm:px-12">
           <h2 className="max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-            Stop scrubbing. Start asking.
+            The answer is already in the lecture.
           </h2>
-          <p className="max-w-xl text-lg leadiggVGyuung-relaxed text-primary-foreground/80 text-pretty">
-            Build your private lecture library and get grounded answers with
-            timestamps in minutes.
+          <p className="max-w-xl text-lg leading-relaxed text-primary-foreground/80 text-pretty">
+            Let Mementor find it, explain it, and show you exactly where it
+            came from.
           </p>
           <Button
             size="lg"
@@ -20,7 +20,7 @@ export function CtaSection() {
             nativeButton={false}
             render={<Link href="/register" />}
           >
-            Create your free account
+            Get started
             <ArrowRight />
           </Button>
         </div>

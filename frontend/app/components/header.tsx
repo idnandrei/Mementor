@@ -2,9 +2,21 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { ArrowRight, LogOut, Menu, Settings, UserRound, X } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { SiteLogo } from "@/app/components/logo";
+import { Avatar, AvatarFallback } from "@/app/components/ui/avatar";
+import { Skeleton } from "@/app/components/ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/app/components/ui/dropdown-menu";
+import { useAuth } from "@/hooks/useAuth";
 
 const navLinks = [
   { label: "Features", href: "/#features" },
@@ -14,6 +26,15 @@ const navLinks = [
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const {
+    user,
+    isAuthenticated,
+    isLoading,
+    logout,
+    isLoggingOut,
+  } = useAuth();
+
+  const initials = user?.username.slice(0, 2).toUpperCase();
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/80 backdrop-blur-md">
@@ -32,22 +53,92 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-2 md:flex">
-          <Button
-            variant="ghost"
-            size="lg"
-            nativeButton={false}
-            render={<Link href="/login" />}
-          >
-            Sign in
-          </Button>
-          <Button
-            size="lg"
-            nativeButton={false}
-            render={<Link href="/register" />}
-          >
-            Get started free
-          </Button>
+        <div className="hidden min-w-56 items-center justify-end gap-2 md:flex">
+          {isLoading ? (
+            <>
+              <Skeleton className="size-8 rounded-full" />
+              <Skeleton className="h-9 w-28 rounded-full" />
+            </>
+          ) : isAuthenticated && user ? (
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  aria-label={`Open account menu for ${user.username}`}
+                  render={
+                    <Button variant="ghost" className="gap-2 px-2" />
+                  }
+                >
+                  <Avatar size="sm">
+                    <AvatarFallback className="bg-primary/10 text-primary">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="max-w-28 truncate">{user.username}</span>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" sideOffset={8} className="w-64">
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel>
+                      <span className="flex items-center gap-3">
+                        <Avatar size="lg">
+                          <AvatarFallback className="bg-primary/10 text-primary">
+                            {initials}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="min-w-0">
+                          <span className="block truncate font-medium text-foreground">
+                            {user.username}
+                          </span>
+                          <span className="block truncate font-normal">
+                            {user.email}
+                          </span>
+                        </span>
+                      </span>
+                    </DropdownMenuLabel>
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <UserRound />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Settings />
+                    Account settings
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    variant="destructive"
+                    disabled={isLoggingOut}
+                    onClick={() => logout({})}
+                  >
+                    <LogOut />
+                    {isLoggingOut ? "Signing out…" : "Sign out"}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button size="lg" nativeButton={false} render={<Link href="/home" />}>
+                Go to workspace
+                <ArrowRight data-icon="inline-end" />
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="ghost"
+                size="lg"
+                nativeButton={false}
+                render={<Link href="/login" />}
+              >
+                Sign in
+              </Button>
+              <Button
+                size="lg"
+                nativeButton={false}
+                render={<Link href="/register" />}
+              >
+                Get started
+              </Button>
+            </>
+          )}
         </div>
 
         <Button
@@ -75,18 +166,50 @@ export function SiteHeader() {
                 {link.label}
               </a>
             ))}
-            <div className="mt-2 flex flex-col gap-2">
-              <Button
-                variant="outline"
-                nativeButton={false}
-                render={<Link href="/login" />}
-              >
-                Sign in
-              </Button>
-              <Button nativeButton={false} render={<Link href="/register" />}>
-                Get started free
-              </Button>
-            </div>
+            {!isLoading && (
+              <div className="mt-2 flex flex-col gap-2">
+                {isAuthenticated && user ? (
+                  <>
+                    <div className="flex items-center gap-3 rounded-xl bg-muted/60 px-3 py-3">
+                      <Avatar>
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{user.username}</p>
+                        <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                      </div>
+                    </div>
+                    <Button nativeButton={false} render={<Link href="/home" />}>
+                      Go to workspace
+                      <ArrowRight data-icon="inline-end" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      disabled={isLoggingOut}
+                      onClick={() => logout({})}
+                    >
+                      <LogOut data-icon="inline-start" />
+                      {isLoggingOut ? "Signing out…" : "Sign out"}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      nativeButton={false}
+                      render={<Link href="/login" />}
+                    >
+                      Sign in
+                    </Button>
+                    <Button nativeButton={false} render={<Link href="/register" />}>
+                      Get started
+                    </Button>
+                  </>
+                )}
+              </div>
+            )}
           </nav>
         </div>
       )}

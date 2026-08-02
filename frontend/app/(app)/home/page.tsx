@@ -3,7 +3,6 @@ import {
   MoreHorizontal,
   Play,
   Sparkles,
-  Upload,
   Video,
 } from "lucide-react";
 import Link from "next/link";
@@ -20,6 +19,7 @@ import {
   CardTitle,
 } from "@/app/components/ui/card";
 import { Progress } from "@/app/components/ui/progress";
+import { UploadDialog } from "@/app/components/upload-dialog";
 
 const recentLectures = [
   {
@@ -71,10 +71,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        <Button size="lg">
-          <Upload data-icon="inline-start" />
-          Upload lecture
-        </Button>
+        <UploadDialog size="lg" label="Upload lecture" />
       </section>
 
       <section

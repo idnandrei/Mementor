@@ -1,8 +1,6 @@
-import { Upload } from "lucide-react";
-
 import { LectureGrid } from "@/app/components/lecture-grid";
 import { Badge } from "@/app/components/ui/badge";
-import { Button } from "@/app/components/ui/button";
+import { UploadDialog } from "@/app/components/upload-dialog";
 import { lectures } from "@/lib/demo-library";
 
 export const metadata = {
@@ -21,7 +19,7 @@ export default function LibraryPage() {
             Every lecture you add lives here. Browse, search, and start a conversation.
           </p>
         </div>
-        <Button size="lg"><Upload data-icon="inline-start" />Upload video</Button>
+        <UploadDialog size="lg" label="Upload video" />
       </section>
       <LectureGrid lectures={lectures} />
     </div>
