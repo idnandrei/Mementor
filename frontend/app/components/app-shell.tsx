@@ -45,7 +45,7 @@ export function AppShell({
       <AppSidebar
         user={user}
         isLoggingOut={isLoggingOut}
-        onLogout={() => logout({})}
+        onLogoutAction={() => logout({})}
       />
 
       <SidebarInset>

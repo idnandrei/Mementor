@@ -42,6 +42,11 @@ class Settings(BaseSettings):
         "none",
     ] = "lax"
 
+    S3_BUCKET_NAME: str
+    S3_AWS_REGION: str = "ap-southeast-1"
+    AWS_ACCESS_KEY_ID: str
+    AWS_SECRET_ACCESS_KEY: str
+
     @property
     def DATABASE_URL(self) -> str:
         return f"postgresql+psycopg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"

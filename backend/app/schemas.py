@@ -1,7 +1,19 @@
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from sqlalchemy import UUID
+
+from app.enums import UploadStatus, VideoStatus
+
+VideoContentType = Literal[
+    "video/mp4",
+    "video/quicktime",
+    "video/webm",
+    "video/x-matroska",
+    "application/x-matroska",
+]
 
 
 class Token(BaseModel):
@@ -41,3 +53,38 @@ class LoginRequest(BaseModel):
 
 class LoginResponse(BaseModel):
     user: UserResponse
+
+
+class VideoUploadResponse(BaseModel):
+    video_id: uuid.UUID
+    upload_id: uuid.UUID
+    status: UploadStatus
+
+
+class VideoUploadRequest(BaseModel):
+    title: str = Field(min_length=1, max_length=255)
+    filename: str = Field(min_length=1, max_length=500)
+    content_type: VideoContentType
+    size_bytes: int = Field(gt=0)
+    collection_ids: list[uuid.UUID] = []
+
+
+class CollectionResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    name: str
+    description: str | None
+    color_tag: str
+
+
+class VideoResponse(BaseModel):
+    id: uuid.UUID
+    title: str
+    original_filename: str
+    content_type: str
+    size_bytes: int | None
+    status: VideoStatus
+    created_at: datetime
+    uploaded_at: datetime | None
+    collection_names: list[str]

@@ -1,10 +1,21 @@
-"use client"
+"use client";
 
-import { useCallback, useState } from "react"
-import { FileVideo, Upload, X } from "lucide-react"
-import { useDropzone } from "react-dropzone"
+import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  getCollectionsOptions,
+  uploadVideoMutation,
+} from "@/generated/api/@tanstack/react-query.gen";
+import type { VideoUploadRequest } from "@/generated/api";
+import { useCallback, useState } from "react";
+import { FileVideo, Upload, X } from "lucide-react";
+import { useDropzone } from "react-dropzone";
+import { toast } from "sonner";
 
-import { Button } from "@/app/components/ui/button"
+import { Button } from "@/app/components/ui/button";
+import {
+  CollectionPicker,
+  type SelectedCollection,
+} from "@/app/components/collection-picker";
 import {
   Dialog,
   DialogClose,
@@ -14,79 +25,154 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/app/components/ui/dialog"
-import { Input } from "@/app/components/ui/input"
-import { cn } from "@/lib/utils"
+} from "@/app/components/ui/dialog";
+import { Input } from "@/app/components/ui/input";
+import { cn } from "@/lib/utils";
+import { formatFileSize } from "@/lib/utils/file";
+import { titleFromFilename } from "@/lib/utils/string";
 
 type UploadDialogProps = {
-  label?: string
-  size?: "default" | "lg"
-  className?: string
-}
+  label?: string;
+  size?: "default" | "lg";
+  className?: string;
+};
 
-function titleFromFilename(filename: string) {
-  return filename.replace(/\.[^/.]+$/, "").replace(/[-_]+/g, " ")
-}
+type UploadErrorContent = {
+  message: string;
+  description?: string;
+};
 
-function formatFileSize(bytes: number) {
-  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
+const uploadErrorContent: Record<string, UploadErrorContent> = {
+  "file-invalid-type": {
+    message: "Unsupported file type",
+    description: "Choose a video file.",
+  },
+  "file-too-large": {
+    message: "File is too large",
+  },
+  "file-too-small": {
+    message: "File is too small",
+  },
+};
+
+const fallbackUploadError: UploadErrorContent = {
+  message: "This file could not be uploaded",
+};
 
 export function UploadDialog({
   label = "Upload",
   size = "default",
   className,
 }: UploadDialogProps) {
-  const [file, setFile] = useState<File | null>(null)
-  const [title, setTitle] = useState("")
-  const [fileError, setFileError] = useState<string | null>(null)
+  const [openDialog, setOpenDialog] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [title, setTitle] = useState("");
+  const [selectedCollections, setSelectedCollections] = useState<
+    SelectedCollection[]
+  >([]);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   const chooseFile = useCallback((nextFile: File) => {
-    setFile(nextFile)
-    setFileError(null)
-    setTitle((current) => current || titleFromFilename(nextFile.name))
-  }, [])
+    setFile(nextFile);
+    setFileError(null);
+    setTitle((current) => current || titleFromFilename(nextFile.name));
+  }, []);
 
-  const {
-    getRootProps,
-    getInputProps,
-    isDragActive,
-    isDragReject,
-    open,
-  } = useDropzone({
-    accept: {
-      "video/*": [],
-    },
-    multiple: false,
-    maxFiles: 1,
-    noClick: true,
-    onDropAccepted: ([acceptedFile]) => {
-      if (acceptedFile) chooseFile(acceptedFile)
-    },
-    onDropRejected: ([rejection]) => {
-      const hasTooManyFiles = rejection?.errors.some(
-        (error) => error.code === "too-many-files"
-      )
+  const { getRootProps, getInputProps, isDragActive, isDragReject, open } =
+    useDropzone({
+      accept: {
+        "video/*": [],
+        "application/x-matroska": [".mkv"],
+      },
+      multiple: false,
+      maxFiles: 1,
+      noClick: true,
+      onDrop: (acceptedFiles, rejections) => {
+        const fileCount = acceptedFiles.length + rejections.length;
+        const hasTooManyFiles = fileCount > 1;
 
-      setFileError(
-        hasTooManyFiles
-          ? "Choose one video at a time."
-          : "This file isn’t a video. Choose a video file to continue."
-      )
-    },
-  })
+        if (hasTooManyFiles) {
+          toast.error("Too many files", {
+            description: "Choose one video at a time.",
+          });
+        }
 
-  function clearFile() {
-    setFile(null)
-    setFileError(null)
+        for (const rejection of rejections) {
+          for (const error of rejection.errors) {
+            if (error.code === "too-many-files") continue;
+
+            const { message, description } =
+              uploadErrorContent[error.code] ?? fallbackUploadError;
+
+            toast.error(message, { description });
+          }
+        }
+
+        if (hasTooManyFiles || rejections.length > 0) {
+          setFile(null);
+          setFileError("Upload failed");
+          return;
+        }
+
+        const [acceptedFile] = acceptedFiles;
+        if (acceptedFile) {
+          chooseFile(acceptedFile);
+          toast.success("Video selected", {
+            description: acceptedFile.name,
+          });
+        }
+      },
+    });
+
+  const collectionsQuery = useQuery(getCollectionsOptions());
+  const availableCollections =
+    collectionsQuery.data?.map((collection) => ({
+      id: collection.id,
+      label: collection.name,
+      color: "bg-cyan-500",
+    })) ?? [];
+
+  function resetUploadForm() {
+    setFile(null);
+    setTitle("");
+    setSelectedCollections([]);
+    setFileError(null);
+  }
+
+  const upload = useMutation({
+    ...uploadVideoMutation(),
+
+    onSuccess: (data) => {
+      console.log(data.video_id);
+      console.log(data.upload_id);
+      console.log(data.status);
+      setOpenDialog(false);
+      toast.success("Upload started", { description: title });
+      resetUploadForm();
+    },
+
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  function handleUpload() {
+    if (!file || !title.trim()) return;
+
+    const body: VideoUploadRequest = {
+      title: title.trim(),
+      filename: file.name,
+      content_type: file.type as VideoUploadRequest["content_type"],
+      size_bytes: file.size,
+      collection_ids: selectedCollections.map(({ id }) => id),
+    };
+
+    upload.mutate({ body });
   }
 
   return (
-    <Dialog>
-      <DialogTrigger
-        render={<Button size={size} className={className} />}
-      >
+    <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+      <DialogTrigger render={<Button size={size} className={className} />}>
         <Upload data-icon="inline-start" />
         {label}
       </DialogTrigger>
@@ -95,7 +181,8 @@ export function UploadDialog({
         <DialogHeader>
           <DialogTitle>Upload a lecture</DialogTitle>
           <DialogDescription>
-            Add a recording to your library. You can choose a file or drop it below.
+            Add a recording to your library. You can choose a file or drop it
+            below.
           </DialogDescription>
         </DialogHeader>
 
@@ -107,8 +194,9 @@ export function UploadDialog({
             })}
             className={cn(
               "flex min-h-48 flex-col items-center justify-center rounded-3xl border border-dashed bg-muted/35 px-6 py-8 text-center transition-colors",
-              isDragActive && "border-primary bg-primary/5",
-              isDragReject && "border-destructive bg-destructive/5"
+              fileError && "border-destructive bg-destructive/5",
+              isDragActive && "border-green-600 bg-green-600/5",
+              isDragReject && "border-destructive bg-destructive/5",
             )}
           >
             <input {...getInputProps()} />
@@ -117,9 +205,19 @@ export function UploadDialog({
                 <span className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                   <FileVideo className="size-6" />
                 </span>
-                <p className="max-w-full truncate text-sm font-medium">{file.name}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
-                <Button type="button" variant="ghost" size="sm" className="mt-3" onClick={clearFile}>
+                <p className="max-w-full truncate text-sm font-medium">
+                  {file.name}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {formatFileSize(file.size)}
+                </p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="mt-3"
+                  onClick={resetUploadForm}
+                >
                   <X data-icon="inline-start" />
                   Remove
                 </Button>
@@ -129,20 +227,31 @@ export function UploadDialog({
                 <span className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                   <Upload className="size-6" />
                 </span>
-                <p className="text-sm font-medium">Drop your lecture file here</p>
-                <p className="mt-1 text-xs text-muted-foreground">or select it from your device</p>
-                <Button type="button" variant="outline" className="mt-4" onClick={open}>
+                <p
+                  role={fileError ? "alert" : undefined}
+                  className={cn(
+                    "text-sm font-medium",
+                    fileError && "text-destructive",
+                  )}
+                >
+                  {fileError ?? "Drop your lecture file here"}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {fileError
+                    ? "Review the error notifications and try again"
+                    : "or select it from your device"}
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-4"
+                  onClick={open}
+                >
                   Select file
                 </Button>
               </>
             )}
           </div>
-          {fileError && (
-            <p role="alert" className="-mt-3 text-sm text-destructive">
-              {fileError}
-            </p>
-          )}
-
           <div className="space-y-2">
             <label htmlFor="lecture-title" className="text-sm font-medium">
               Title
@@ -157,15 +266,35 @@ export function UploadDialog({
               You can change how this lecture appears in your library.
             </p>
           </div>
+          <div className="space-y-2">
+            <span className="text-sm font-medium">
+              Collections{" "}
+              <span className="text-muted-foreground">(optional)</span>
+            </span>
+            <CollectionPicker
+              collections={availableCollections}
+              value={selectedCollections}
+              onChange={setSelectedCollections}
+            />
+            <p className="text-xs text-muted-foreground">
+              Add this video to one or more collections.
+            </p>
+          </div>
         </div>
 
         <DialogFooter className="mt-7">
-          <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-          <Button type="button" disabled={!file || !title.trim()}>
-            Add to library
+          <DialogClose render={<Button variant="outline" />}>
+            Cancel
+          </DialogClose>
+          <Button
+            type="button"
+            disabled={!file || !title.trim()}
+            onClick={handleUpload}
+          >
+            Upload
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

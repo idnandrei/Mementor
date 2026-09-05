@@ -35,6 +35,28 @@ export type BodyCreateAccessToken = {
 };
 
 /**
+ * CollectionResponse
+ */
+export type CollectionResponse = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Description
+     */
+    description: string | null;
+    /**
+     * Color Tag
+     */
+    color_tag: string;
+};
+
+/**
  * ErrorResponse
  */
 export type ErrorResponse = {
@@ -88,6 +110,11 @@ export type Token = {
      */
     token_type?: string;
 };
+
+/**
+ * UploadStatus
+ */
+export type UploadStatus = 'initiated' | 'completed' | 'aborted' | 'failed';
 
 /**
  * UserCreate
@@ -155,6 +182,91 @@ export type ValidationError = {
     ctx?: {
         [key: string]: unknown;
     };
+};
+
+/**
+ * VideoResponse
+ */
+export type VideoResponse = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Original Filename
+     */
+    original_filename: string;
+    /**
+     * Content Type
+     */
+    content_type: string;
+    /**
+     * Size Bytes
+     */
+    size_bytes: number | null;
+    status: VideoStatus;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Uploaded At
+     */
+    uploaded_at: string | null;
+    /**
+     * Collection Names
+     */
+    collection_names: Array<string>;
+};
+
+/**
+ * VideoStatus
+ */
+export type VideoStatus = 'pending_upload' | 'uploaded' | 'failed';
+
+/**
+ * VideoUploadRequest
+ */
+export type VideoUploadRequest = {
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Filename
+     */
+    filename: string;
+    /**
+     * Content Type
+     */
+    content_type: 'video/mp4' | 'video/quicktime' | 'video/webm' | 'video/x-matroska' | 'application/x-matroska';
+    /**
+     * Size Bytes
+     */
+    size_bytes: number;
+    /**
+     * Collection Ids
+     */
+    collection_ids?: Array<string>;
+};
+
+/**
+ * VideoUploadResponse
+ */
+export type VideoUploadResponse = {
+    /**
+     * Video Id
+     */
+    video_id: string;
+    /**
+     * Upload Id
+     */
+    upload_id: string;
+    status: UploadStatus;
 };
 
 export type ListUsersData = {
@@ -352,3 +464,144 @@ export type CreateAccessTokenResponses = {
 };
 
 export type CreateAccessTokenResponse = CreateAccessTokenResponses[keyof CreateAccessTokenResponses];
+
+export type GetVideosData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/videos/';
+};
+
+export type GetVideosErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetVideosError = GetVideosErrors[keyof GetVideosErrors];
+
+export type GetVideosResponses = {
+    /**
+     * Response Getvideos
+     *
+     * Successful Response
+     */
+    200: Array<VideoResponse>;
+};
+
+export type GetVideosResponse = GetVideosResponses[keyof GetVideosResponses];
+
+export type GetVideoData = {
+    body?: never;
+    path: {
+        /**
+         * Video Id
+         */
+        video_id: string;
+    };
+    query?: never;
+    url: '/api/videos/{video_id}';
+};
+
+export type GetVideoErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetVideoError = GetVideoErrors[keyof GetVideoErrors];
+
+export type GetVideoResponses = {
+    /**
+     * Successful Response
+     */
+    200: VideoResponse;
+};
+
+export type GetVideoResponse = GetVideoResponses[keyof GetVideoResponses];
+
+export type UploadVideoData = {
+    body: VideoUploadRequest;
+    path?: never;
+    query?: never;
+    url: '/api/videos/upload';
+};
+
+export type UploadVideoErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UploadVideoError = UploadVideoErrors[keyof UploadVideoErrors];
+
+export type UploadVideoResponses = {
+    /**
+     * Successful Response
+     */
+    201: VideoUploadResponse;
+};
+
+export type UploadVideoResponse = UploadVideoResponses[keyof UploadVideoResponses];
+
+export type GetCollectionsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/collections/';
+};
+
+export type GetCollectionsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetCollectionsError = GetCollectionsErrors[keyof GetCollectionsErrors];
+
+export type GetCollectionsResponses = {
+    /**
+     * Response Getcollections
+     *
+     * Successful Response
+     */
+    200: Array<CollectionResponse>;
+};
+
+export type GetCollectionsResponse = GetCollectionsResponses[keyof GetCollectionsResponses];
+
+export type GetCollectionVideosData = {
+    body?: never;
+    path: {
+        /**
+         * Collection Id
+         */
+        collection_id: string;
+    };
+    query?: never;
+    url: '/api/collections/{collection_id}/videos';
+};
+
+export type GetCollectionVideosErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetCollectionVideosError = GetCollectionVideosErrors[keyof GetCollectionVideosErrors];
+
+export type GetCollectionVideosResponses = {
+    /**
+     * Response Getcollectionvideos
+     *
+     * Successful Response
+     */
+    200: Array<VideoResponse>;
+};
+
+export type GetCollectionVideosResponse = GetCollectionVideosResponses[keyof GetCollectionVideosResponses];

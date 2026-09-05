@@ -1,15 +1,16 @@
 import { notFound } from "next/navigation";
 
 import { LectureWorkspace } from "@/app/components/lecture-workspace";
-import { lectures } from "@/lib/demo-library";
-
-export function generateStaticParams() {
-  return lectures.map(({ id }) => ({ id }));
-}
+import { getVideo } from "@/generated/api";
+import { createServerApiClient } from "@/lib/api/server";
 
 export default async function LecturePage({ params }: PageProps<"/library/[id]">) {
   const { id } = await params;
-  const lecture = lectures.find((item) => item.id === id);
-  if (!lecture) notFound();
-  return <LectureWorkspace lecture={lecture} />;
+  const client = await createServerApiClient();
+  const { data: video, error } = await getVideo({
+    client,
+    path: { video_id: id },
+  });
+  if (error || !video) notFound();
+  return <LectureWorkspace video={video} />;
 }

@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
+import { getInitials } from "@/lib/utils/string";
 
 const navLinks = [
   { label: "Features", href: "/#features" },
@@ -34,7 +35,7 @@ export function SiteHeader() {
     isLoggingOut,
   } = useAuth();
 
-  const initials = user?.username.slice(0, 2).toUpperCase();
+  const initials = user ? getInitials(user.username) : undefined;
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/80 backdrop-blur-md">

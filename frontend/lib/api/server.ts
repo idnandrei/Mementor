@@ -1,10 +1,13 @@
 import "server-only";
 
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 
 import { createClient } from "@/generated/api/client";
 
 export async function createServerApiClient() {
+  await connection();
+
   const backendUrl = process.env.BACKEND_URL;
 
   if (!backendUrl) {

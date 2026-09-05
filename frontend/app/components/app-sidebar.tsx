@@ -42,8 +42,13 @@ import {
   SidebarRail,
   SidebarSeparator,
 } from "@/app/components/ui/sidebar";
+import {
+  getCollectionsOptions,
+  getVideosOptions,
+} from "@/generated/api/@tanstack/react-query.gen";
 import type { UserResponse } from "@/generated/api/types.gen";
-import { collections } from "@/lib/demo-library";
+import { getInitials } from "@/lib/utils/string";
+import { useQuery } from "@tanstack/react-query";
 
 const mainNavigation = [
   {
@@ -65,27 +70,33 @@ const mainNavigation = [
     label: "Processing",
     href: "/home#processing",
     icon: Sparkles,
-    badge: "1",
   },
 ];
-
-function getInitials(username: string) {
-  return username.slice(0, 2).toUpperCase();
-}
 
 type AppSidebarProps = {
   user: UserResponse;
   isLoggingOut: boolean;
-  onLogout: () => void;
+  onLogoutAction: () => void;
 };
 
 export function AppSidebar({
   user,
   isLoggingOut,
-  onLogout,
+  onLogoutAction,
 }: AppSidebarProps) {
   const pathname = usePathname();
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const collectionsQuery = useQuery(getCollectionsOptions());
+  const videosQuery = useQuery(getVideosOptions());
+  const pendingVideoCount =
+    videosQuery.data?.filter((video) => video.status === "pending_upload")
+      .length ?? 0;
+  const availableCollections =
+    collectionsQuery.data?.map((collection) => ({
+      id: collection.id,
+      label: collection.name,
+      color: "bg-cyan-500",
+    })) ?? [];
 
   return (
     <Sidebar collapsible="icon">
@@ -121,15 +132,18 @@ export function AppSidebar({
                     className="group-data-[collapsible=icon]:justify-center"
                     isActive={
                       item.href === pathname ||
-                      (item.href === "/library" && pathname.startsWith("/library/"))
+                      (item.href === "/library" &&
+                        pathname.startsWith("/library/"))
                     }
                     render={<Link href={item.href} />}
                   >
                     <item.icon />
-                    <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+                    <span className="group-data-[collapsible=icon]:hidden">
+                      {item.label}
+                    </span>
                   </SidebarMenuButton>
-                  {item.badge && (
-                    <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
+                  {item.label === "Processing" && pendingVideoCount > 0 && (
+                    <SidebarMenuBadge>{pendingVideoCount}</SidebarMenuBadge>
                   )}
                 </SidebarMenuItem>
               ))}
@@ -143,18 +157,20 @@ export function AppSidebar({
           <SidebarGroupLabel>Collections</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {collections.map((collection) => (
+              {availableCollections.map((collection) => (
                 <SidebarMenuItem key={collection.label}>
                   <SidebarMenuButton
                     tooltip={collection.label}
                     className="group-data-[collapsible=icon]:justify-center"
-                    isActive={pathname === `/collections/${collection.slug}`}
-                    render={<Link href={`/collections/${collection.slug}`} />}
+                    isActive={pathname === `/collections/${collection.id}`}
+                    render={<Link href={`/collections/${collection.id}`} />}
                   >
                     <span
                       className={`size-2.5 shrink-0 rounded-full ${collection.color}`}
                     />
-                    <span className="group-data-[collapsible=icon]:hidden">{collection.label}</span>
+                    <span className="group-data-[collapsible=icon]:hidden">
+                      {collection.label}
+                    </span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -166,7 +182,10 @@ export function AppSidebar({
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <DropdownMenu open={isAccountMenuOpen} onOpenChange={setIsAccountMenuOpen}>
+            <DropdownMenu
+              open={isAccountMenuOpen}
+              onOpenChange={setIsAccountMenuOpen}
+            >
               <DropdownMenuTrigger
                 aria-label={`Open account menu for ${user.username}`}
                 render={
@@ -183,12 +202,21 @@ export function AppSidebar({
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-                  <p className="truncate text-sm font-medium">{user.username}</p>
-                  <p className="truncate text-xs text-sidebar-foreground/60">{user.email}</p>
+                  <p className="truncate text-sm font-medium">
+                    {user.username}
+                  </p>
+                  <p className="truncate text-xs text-sidebar-foreground/60">
+                    {user.email}
+                  </p>
                 </div>
                 <ChevronsUpDown className="size-4 text-sidebar-foreground/55 group-data-[collapsible=icon]:hidden" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" align="start" sideOffset={8} className="w-64">
+              <DropdownMenuContent
+                side="top"
+                align="start"
+                sideOffset={8}
+                className="w-64"
+              >
                 <DropdownMenuGroup>
                   <DropdownMenuLabel>
                     <span className="flex items-center gap-3">
@@ -198,8 +226,12 @@ export function AppSidebar({
                         </AvatarFallback>
                       </Avatar>
                       <span className="min-w-0">
-                        <span className="block truncate font-medium text-foreground">{user.username}</span>
-                        <span className="block truncate font-normal">{user.email}</span>
+                        <span className="block truncate font-medium text-foreground">
+                          {user.username}
+                        </span>
+                        <span className="block truncate font-normal">
+                          {user.email}
+                        </span>
                       </span>
                     </span>
                   </DropdownMenuLabel>
@@ -226,7 +258,7 @@ export function AppSidebar({
                 <DropdownMenuItem
                   variant="destructive"
                   disabled={isLoggingOut}
-                  onClick={onLogout}
+                  onClick={onLogoutAction}
                 >
                   <LogOut />
                   {isLoggingOut ? "Signing out…" : "Sign out"}

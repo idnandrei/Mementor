@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, type Options as Options2, type RequestResult, type TDataShape, urlSearchParamsBodySerializer } from './client';
 import { client } from './client.gen';
-import type { CreateAccessTokenData, CreateAccessTokenErrors, CreateAccessTokenResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetUserData, GetUserErrors, GetUserResponses, ListUsersData, ListUsersResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutResponses, RegisterUserData, RegisterUserErrors, RegisterUserResponses } from './types.gen';
+import type { CreateAccessTokenData, CreateAccessTokenErrors, CreateAccessTokenResponses, GetCollectionsData, GetCollectionsErrors, GetCollectionsResponses, GetCollectionVideosData, GetCollectionVideosErrors, GetCollectionVideosResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetUserData, GetUserErrors, GetUserResponses, GetVideoData, GetVideoErrors, GetVideoResponses, GetVideosData, GetVideosErrors, GetVideosResponses, ListUsersData, ListUsersResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutResponses, RegisterUserData, RegisterUserErrors, RegisterUserResponses, UploadVideoData, UploadVideoErrors, UploadVideoResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -74,3 +74,35 @@ export const createAccessToken = <ThrowOnError extends boolean = false>(options:
         ...options.headers
     }
 });
+
+/**
+ * Get Videos
+ */
+export const getVideos = <ThrowOnError extends boolean = false>(options?: Options<GetVideosData, ThrowOnError>): RequestResult<GetVideosResponses, GetVideosErrors, ThrowOnError> => (options?.client ?? client).get<GetVideosResponses, GetVideosErrors, ThrowOnError>({ url: '/api/videos/', ...options });
+
+/**
+ * Get Video
+ */
+export const getVideo = <ThrowOnError extends boolean = false>(options: Options<GetVideoData, ThrowOnError>): RequestResult<GetVideoResponses, GetVideoErrors, ThrowOnError> => (options.client ?? client).get<GetVideoResponses, GetVideoErrors, ThrowOnError>({ url: '/api/videos/{video_id}', ...options });
+
+/**
+ * Initiate Upload
+ */
+export const uploadVideo = <ThrowOnError extends boolean = false>(options: Options<UploadVideoData, ThrowOnError>): RequestResult<UploadVideoResponses, UploadVideoErrors, ThrowOnError> => (options.client ?? client).post<UploadVideoResponses, UploadVideoErrors, ThrowOnError>({
+    url: '/api/videos/upload',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get Collections
+ */
+export const getCollections = <ThrowOnError extends boolean = false>(options?: Options<GetCollectionsData, ThrowOnError>): RequestResult<GetCollectionsResponses, GetCollectionsErrors, ThrowOnError> => (options?.client ?? client).get<GetCollectionsResponses, GetCollectionsErrors, ThrowOnError>({ url: '/api/collections/', ...options });
+
+/**
+ * Get Collection Videos
+ */
+export const getCollectionVideos = <ThrowOnError extends boolean = false>(options: Options<GetCollectionVideosData, ThrowOnError>): RequestResult<GetCollectionVideosResponses, GetCollectionVideosErrors, ThrowOnError> => (options.client ?? client).get<GetCollectionVideosResponses, GetCollectionVideosErrors, ThrowOnError>({ url: '/api/collections/{collection_id}/videos', ...options });

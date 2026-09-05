@@ -1,14 +1,18 @@
 import { LectureGrid } from "@/app/components/lecture-grid";
 import { Badge } from "@/app/components/ui/badge";
 import { UploadDialog } from "@/app/components/upload-dialog";
-import { lectures } from "@/lib/demo-library";
+import { getVideos } from "@/generated/api";
+import { createServerApiClient } from "@/lib/api/server";
 
 export const metadata = {
   title: "Library | Mementor",
   description: "Your private, searchable video library.",
 };
 
-export default function LibraryPage() {
+export default async function LibraryPage() {
+  const client = await createServerApiClient();
+  const { data: videos } = await getVideos({ client, throwOnError: true });
+
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-9 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <section className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
@@ -21,7 +25,7 @@ export default function LibraryPage() {
         </div>
         <UploadDialog size="lg" label="Upload video" />
       </section>
-      <LectureGrid lectures={lectures} />
+      <LectureGrid videos={videos} />
     </div>
   );
 }

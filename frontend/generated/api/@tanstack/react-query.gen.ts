@@ -3,8 +3,8 @@
 import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { createAccessToken, getCurrentUser, getUser, listUsers, login, logout, type Options, registerUser } from '../sdk.gen';
-import type { CreateAccessTokenData, CreateAccessTokenError, CreateAccessTokenResponse, GetCurrentUserData, GetCurrentUserError, GetCurrentUserResponse, GetUserData, GetUserError, GetUserResponse, ListUsersData, ListUsersResponse, LoginData, LoginError, LoginResponse2, LogoutData, LogoutResponse, RegisterUserData, RegisterUserError, RegisterUserResponse } from '../types.gen';
+import { createAccessToken, getCollections, getCollectionVideos, getCurrentUser, getUser, getVideo, getVideos, listUsers, login, logout, type Options, registerUser, uploadVideo } from '../sdk.gen';
+import type { CreateAccessTokenData, CreateAccessTokenError, CreateAccessTokenResponse, GetCollectionsData, GetCollectionsError, GetCollectionsResponse, GetCollectionVideosData, GetCollectionVideosError, GetCollectionVideosResponse, GetCurrentUserData, GetCurrentUserError, GetCurrentUserResponse, GetUserData, GetUserError, GetUserResponse, GetVideoData, GetVideoError, GetVideoResponse, GetVideosData, GetVideosError, GetVideosResponse, ListUsersData, ListUsersResponse, LoginData, LoginError, LoginResponse2, LogoutData, LogoutResponse, RegisterUserData, RegisterUserError, RegisterUserResponse, UploadVideoData, UploadVideoError, UploadVideoResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -201,3 +201,95 @@ export const createAccessTokenMutation = (options?: Partial<Options<CreateAccess
     };
     return mutationOptions;
 };
+
+export const getVideosQueryKey = (options?: Options<GetVideosData>) => createQueryKey('getVideos', options, false, ['videos']);
+
+/**
+ * Get Videos
+ */
+export const getVideosOptions = (options?: Options<GetVideosData>) => queryOptions<GetVideosResponse, GetVideosError, GetVideosResponse, ReturnType<typeof getVideosQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getVideos({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getVideosQueryKey(options)
+});
+
+export const getVideoQueryKey = (options: Options<GetVideoData>) => createQueryKey('getVideo', options, false, ['videos']);
+
+/**
+ * Get Video
+ */
+export const getVideoOptions = (options: Options<GetVideoData>) => queryOptions<GetVideoResponse, GetVideoError, GetVideoResponse, ReturnType<typeof getVideoQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getVideo({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getVideoQueryKey(options)
+});
+
+export const uploadVideoMutationKey = (options?: Partial<Options<UploadVideoData>>) => createMutationKey('uploadVideo', options);
+
+/**
+ * Initiate Upload
+ */
+export const uploadVideoMutation = (options?: Partial<Options<UploadVideoData>>): UseMutationOptions<UploadVideoResponse, UploadVideoError, Options<UploadVideoData>> => {
+    const mutationOptions: UseMutationOptions<UploadVideoResponse, UploadVideoError, Options<UploadVideoData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await uploadVideo({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        },
+        mutationKey: uploadVideoMutationKey(options)
+    };
+    return mutationOptions;
+};
+
+export const getCollectionsQueryKey = (options?: Options<GetCollectionsData>) => createQueryKey('getCollections', options, false, ['collections']);
+
+/**
+ * Get Collections
+ */
+export const getCollectionsOptions = (options?: Options<GetCollectionsData>) => queryOptions<GetCollectionsResponse, GetCollectionsError, GetCollectionsResponse, ReturnType<typeof getCollectionsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getCollections({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getCollectionsQueryKey(options)
+});
+
+export const getCollectionVideosQueryKey = (options: Options<GetCollectionVideosData>) => createQueryKey('getCollectionVideos', options, false, ['collections']);
+
+/**
+ * Get Collection Videos
+ */
+export const getCollectionVideosOptions = (options: Options<GetCollectionVideosData>) => queryOptions<GetCollectionVideosResponse, GetCollectionVideosError, GetCollectionVideosResponse, ReturnType<typeof getCollectionVideosQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getCollectionVideos({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getCollectionVideosQueryKey(options)
+});
