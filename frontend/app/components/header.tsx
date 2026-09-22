@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
-import { getInitials } from "@/lib/utils/string";
+import { getInitials } from "@/lib/utils";
 
 const navLinks = [
   { label: "Features", href: "/#features" },
@@ -27,13 +27,7 @@ const navLinks = [
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
-  const {
-    user,
-    isAuthenticated,
-    isLoading,
-    logout,
-    isLoggingOut,
-  } = useAuth();
+  const { user, isAuthenticated, isLoading, logout, isLoggingOut } = useAuth();
 
   const initials = user ? getInitials(user.username) : undefined;
 
@@ -65,9 +59,7 @@ export function SiteHeader() {
               <DropdownMenu>
                 <DropdownMenuTrigger
                   aria-label={`Open account menu for ${user.username}`}
-                  render={
-                    <Button variant="ghost" className="gap-2 px-2" />
-                  }
+                  render={<Button variant="ghost" className="gap-2 px-2" />}
                 >
                   <Avatar size="sm">
                     <AvatarFallback className="bg-primary/10 text-primary">
@@ -76,7 +68,11 @@ export function SiteHeader() {
                   </Avatar>
                   <span className="max-w-28 truncate">{user.username}</span>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" sideOffset={8} className="w-64">
+                <DropdownMenuContent
+                  align="end"
+                  sideOffset={8}
+                  className="w-64"
+                >
                   <DropdownMenuGroup>
                     <DropdownMenuLabel>
                       <span className="flex items-center gap-3">
@@ -116,7 +112,11 @@ export function SiteHeader() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button size="lg" nativeButton={false} render={<Link href="/home" />}>
+              <Button
+                size="lg"
+                nativeButton={false}
+                render={<Link href="/home" />}
+              >
                 Go to workspace
                 <ArrowRight data-icon="inline-end" />
               </Button>
@@ -178,8 +178,12 @@ export function SiteHeader() {
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{user.username}</p>
-                        <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                        <p className="truncate text-sm font-medium">
+                          {user.username}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {user.email}
+                        </p>
                       </div>
                     </div>
                     <Button nativeButton={false} render={<Link href="/home" />}>
@@ -204,7 +208,10 @@ export function SiteHeader() {
                     >
                       Sign in
                     </Button>
-                    <Button nativeButton={false} render={<Link href="/register" />}>
+                    <Button
+                      nativeButton={false}
+                      render={<Link href="/register" />}
+                    >
                       Get started
                     </Button>
                   </>

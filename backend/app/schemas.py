@@ -13,6 +13,8 @@ VideoContentType = Literal[
     "video/webm",
     "video/x-matroska",
     "application/x-matroska",
+    "video/x-msvideo",
+    "video/x-m4v",
 ]
 
 
@@ -88,3 +90,16 @@ class VideoResponse(BaseModel):
     created_at: datetime
     uploaded_at: datetime | None
     collection_names: list[str]
+
+
+class SignedPart(BaseModel):
+    part_number: int
+    url: str
+
+
+class SignPartsResponse(BaseModel):
+    parts: list[SignedPart]
+
+
+class SignPartsRequest(BaseModel):
+    part_numbers: list[int] = Field(min_length=1)

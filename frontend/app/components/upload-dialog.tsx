@@ -28,8 +28,14 @@ import {
 } from "@/app/components/ui/dialog";
 import { Input } from "@/app/components/ui/input";
 import { cn } from "@/lib/utils";
-import { formatFileSize } from "@/lib/utils/file";
-import { titleFromFilename } from "@/lib/utils/string";
+import {
+  getPartCount,
+  getPartRange,
+  getVideoContentType,
+  startPartUpload,
+} from "@/lib/uploads";
+import { formatFileSize } from "@/lib/utils";
+import { titleFromFilename } from "@/lib/utils";
 
 type UploadDialogProps = {
   label?: string;
@@ -146,6 +152,9 @@ export function UploadDialog({
       console.log(data.video_id);
       console.log(data.upload_id);
       console.log(data.status);
+      if (file) {
+        console.log(startPartUpload(data.video_id, data.upload_id, file));
+      }
       setOpenDialog(false);
       toast.success("Upload started", { description: title });
       resetUploadForm();
@@ -162,7 +171,10 @@ export function UploadDialog({
     const body: VideoUploadRequest = {
       title: title.trim(),
       filename: file.name,
-      content_type: file.type as VideoUploadRequest["content_type"],
+      content_type: getVideoContentType(
+        file.name,
+        file.type,
+      ) as VideoUploadRequest["content_type"],
       size_bytes: file.size,
       collection_ids: selectedCollections.map(({ id }) => id),
     };

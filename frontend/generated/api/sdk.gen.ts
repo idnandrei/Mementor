@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, type Options as Options2, type RequestResult, type TDataShape, urlSearchParamsBodySerializer } from './client';
 import { client } from './client.gen';
-import type { CreateAccessTokenData, CreateAccessTokenErrors, CreateAccessTokenResponses, GetCollectionsData, GetCollectionsErrors, GetCollectionsResponses, GetCollectionVideosData, GetCollectionVideosErrors, GetCollectionVideosResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetUserData, GetUserErrors, GetUserResponses, GetVideoData, GetVideoErrors, GetVideoResponses, GetVideosData, GetVideosErrors, GetVideosResponses, ListUsersData, ListUsersResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutResponses, RegisterUserData, RegisterUserErrors, RegisterUserResponses, UploadVideoData, UploadVideoErrors, UploadVideoResponses } from './types.gen';
+import type { CreateAccessTokenData, CreateAccessTokenErrors, CreateAccessTokenResponses, GetCollectionsData, GetCollectionsErrors, GetCollectionsResponses, GetCollectionVideosData, GetCollectionVideosErrors, GetCollectionVideosResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetUserData, GetUserErrors, GetUserResponses, GetVideoData, GetVideoErrors, GetVideoResponses, GetVideosData, GetVideosErrors, GetVideosResponses, ListUsersData, ListUsersResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutResponses, RegisterUserData, RegisterUserErrors, RegisterUserResponses, SignPartsData, SignPartsErrors, SignPartsResponses, UploadVideoData, UploadVideoErrors, UploadVideoResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -90,6 +90,18 @@ export const getVideo = <ThrowOnError extends boolean = false>(options: Options<
  */
 export const uploadVideo = <ThrowOnError extends boolean = false>(options: Options<UploadVideoData, ThrowOnError>): RequestResult<UploadVideoResponses, UploadVideoErrors, ThrowOnError> => (options.client ?? client).post<UploadVideoResponses, UploadVideoErrors, ThrowOnError>({
     url: '/api/videos/upload',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Sign Part Uploads
+ */
+export const signParts = <ThrowOnError extends boolean = false>(options: Options<SignPartsData, ThrowOnError>): RequestResult<SignPartsResponses, SignPartsErrors, ThrowOnError> => (options.client ?? client).post<SignPartsResponses, SignPartsErrors, ThrowOnError>({
+    url: '/api/videos/{video_id}/uploads/{upload_id}/parts',
     ...options,
     headers: {
         'Content-Type': 'application/json',

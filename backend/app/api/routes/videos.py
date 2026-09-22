@@ -1,18 +1,31 @@
 import uuid
 
 from fastapi import APIRouter, HTTPException, status
+from sqlalchemy.orm import session
 
 from app import repo
 from app.api.deps import CurrentUser, SessionDep
+from app.enums import UploadStatus
 from app.models import Video, VideoUpload
 from app.repo import (
     create_video,
     create_video_upload,
     get_owned_collection_ids,
+    get_video_upload_if_owned,
     link_video_collection,
 )
-from app.s3 import create_s3_multipart_upload, create_video_object_key
-from app.schemas import VideoResponse, VideoUploadRequest, VideoUploadResponse
+from app.s3 import (
+    create_presigned_part_urls,
+    create_s3_multipart_upload,
+    create_video_object_key,
+)
+from app.schemas import (
+    SignPartsRequest,
+    SignPartsResponse,
+    VideoResponse,
+    VideoUploadRequest,
+    VideoUploadResponse,
+)
 
 router = APIRouter(prefix="/videos", tags=["videos"])
 
@@ -106,3 +119,41 @@ async def initiate_upload(
         upload_id=video_upload.id,
         status=video_upload.status,
     )
+
+
+# TODO: Regenerate client api fc in frontend
+@router.post(
+    "/{video_id}/uploads/{upload_id}/parts",
+    response_model=SignPartsResponse,
+    operation_id="signParts",
+)
+async def sign_part_uploads(
+    video_id: uuid.UUID,
+    upload_id: uuid.UUID,
+    parts: SignPartsRequest,
+    session: SessionDep,
+    current_user: CurrentUser,
+):
+    video_upload = await get_video_upload_if_owned(
+        session=session,
+        owner_id=current_user.id,
+        video_id=video_id,
+        upload_id=upload_id,
+    )
+    if video_upload is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Video upload not found"
+        )
+    if video_upload.status != UploadStatus.INITIATED:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Video upload not in signable state",
+        )
+
+    parts_response = await create_presigned_part_urls(
+        object_key=video_upload.object_key,
+        s3_upload_id=video_upload.s3_upload_id,
+        parts=parts.part_numbers,
+    )
+
+    return SignPartsResponse(parts=parts_response)

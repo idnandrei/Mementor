@@ -98,6 +98,40 @@ export type LoginResponse = {
 };
 
 /**
+ * SignPartsRequest
+ */
+export type SignPartsRequest = {
+    /**
+     * Part Numbers
+     */
+    part_numbers: Array<number>;
+};
+
+/**
+ * SignPartsResponse
+ */
+export type SignPartsResponse = {
+    /**
+     * Parts
+     */
+    parts: Array<SignedPart>;
+};
+
+/**
+ * SignedPart
+ */
+export type SignedPart = {
+    /**
+     * Part Number
+     */
+    part_number: number;
+    /**
+     * Url
+     */
+    url: string;
+};
+
+/**
  * Token
  */
 export type Token = {
@@ -243,7 +277,7 @@ export type VideoUploadRequest = {
     /**
      * Content Type
      */
-    content_type: 'video/mp4' | 'video/quicktime' | 'video/webm' | 'video/x-matroska' | 'application/x-matroska';
+    content_type: 'video/mp4' | 'video/quicktime' | 'video/webm' | 'video/x-matroska' | 'application/x-matroska' | 'video/x-msvideo' | 'video/x-m4v';
     /**
      * Size Bytes
      */
@@ -546,6 +580,40 @@ export type UploadVideoResponses = {
 };
 
 export type UploadVideoResponse = UploadVideoResponses[keyof UploadVideoResponses];
+
+export type SignPartsData = {
+    body: SignPartsRequest;
+    path: {
+        /**
+         * Video Id
+         */
+        video_id: string;
+        /**
+         * Upload Id
+         */
+        upload_id: string;
+    };
+    query?: never;
+    url: '/api/videos/{video_id}/uploads/{upload_id}/parts';
+};
+
+export type SignPartsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SignPartsError = SignPartsErrors[keyof SignPartsErrors];
+
+export type SignPartsResponses = {
+    /**
+     * Successful Response
+     */
+    200: SignPartsResponse;
+};
+
+export type SignPartsResponse2 = SignPartsResponses[keyof SignPartsResponses];
 
 export type GetCollectionsData = {
     body?: never;

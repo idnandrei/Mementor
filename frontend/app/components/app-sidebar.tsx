@@ -47,7 +47,7 @@ import {
   getVideosOptions,
 } from "@/generated/api/@tanstack/react-query.gen";
 import type { UserResponse } from "@/generated/api/types.gen";
-import { getInitials } from "@/lib/utils/string";
+import { getInitials } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 
 const mainNavigation = [

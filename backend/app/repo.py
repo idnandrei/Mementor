@@ -95,6 +95,7 @@ async def create_video(
         original_filename=video_in.filename,
         object_key=object_key,
         content_type=video_in.content_type,
+        size_bytes=video_in.size_bytes,
     )
 
     session.add(video)
@@ -206,3 +207,18 @@ async def get_my_videos(
 async def get_my_video(*, session: SessionDep, owner_id: UUID, video_id: UUID):
     videos = await get_my_videos(session=session, owner_id=owner_id)
     return next((video for video in videos if video["id"] == video_id), None)
+
+
+async def get_video_upload_if_owned(
+    *, session: SessionDep, owner_id: UUID, video_id: UUID, upload_id: UUID
+) -> VideoUpload | None:
+    stmt = (
+        select(VideoUpload)
+        .join(Video, Video.id == VideoUpload.video_id)
+        .where(
+            VideoUpload.id == upload_id,
+            VideoUpload.video_id == video_id,
+            Video.owner_id == owner_id,
+        )
+    )
+    return await session.scalar(stmt)
