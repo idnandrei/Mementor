@@ -1,7 +1,5 @@
 import { signParts } from "@/generated/api";
-import { signPartsMutation } from "@/generated/api/@tanstack/react-query.gen";
 import { getFileExtension } from "@/lib/utils";
-import { useMutation, useQuery } from "@tanstack/react-query";
 
 export const PART_SIZE_BYTES = 16 * 1024 * 1024; // 16MB, 16,777,216
 export type PartRange = { start: number; end: number };
@@ -36,6 +34,7 @@ export async function startPartUpload(
   uploadId: string,
   file: File,
 ) {
+  const completedParts = [];
   const partsNum = getPartCount(file.size);
   const ranges = [];
   for (let partNumber = 1; partNumber <= partsNum; partNumber++) {
@@ -47,5 +46,44 @@ export async function startPartUpload(
     body: { part_numbers: Array.from({ length: partsNum }, (_, i) => i + 1) },
     throwOnError: true,
   });
-  return data.parts;
+  for (const part of data.parts) {
+    const { start, end } = getPartRange(part.part_number, file.size);
+    const chunk = file.slice(start, end);
+    const etag = await uploadPart(part.url, chunk);
+    completedParts.push({ part_number: part.part_number, etag });
+  }
+  return completedParts;
+}
+
+export function uploadPart(url: string, chunk: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+
+    xhr.open("PUT", url);
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        const etag = xhr.getResponseHeader("ETag");
+        if (!etag) {
+          reject(new Error("Missing ETag — check bucket CORS ExposeHeaders"));
+          return;
+        }
+        resolve(etag);
+      } else {
+        reject(new Error(`${xhr.status} - Failed to upload`));
+      }
+    };
+
+    xhr.onerror = () => {
+      reject(new Error("Network error - Failed to upload"));
+    };
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        console.log(`progress: ${event.loaded} / ${event.total} bytes`);
+      }
+    };
+
+    xhr.send(chunk);
+  });
 }

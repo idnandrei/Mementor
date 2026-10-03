@@ -1,8 +1,9 @@
-import asyncio
+from contextlib import AsyncExitStack
 from pathlib import Path
 from uuid import UUID
 
-import boto3
+import aioboto3
+from aiobotocore.config import AioConfig
 
 from app.core.config import settings
 from app.schemas import SignedPart
@@ -16,11 +17,35 @@ ALLOWED_VIDEO_EXTENSIONS = {
     ".m4v",
 }
 
+_session = aioboto3.Session()
+_stack = AsyncExitStack()
+_s3 = None
 
-s3_client = boto3.client(
-    "s3",
-    region_name=settings.S3_AWS_REGION,
-)
+
+async def init_s3():
+    global _s3
+    _s3 = await _stack.enter_async_context(
+        _session.client(
+            "s3",
+            region_name=settings.S3_AWS_REGION,
+            config=AioConfig(
+                signature_version="s3v4", s3={"addressing_style": "virtual"}
+            ),
+        )
+    )
+
+
+async def close_s3():
+    global _s3
+    await _stack.aclose()
+    _s3 = None
+
+
+# To avoid typing error
+def _client():
+    if _s3 is None:
+        raise RuntimeError("S3 client not initialised. Call init_s3() at app startup.")
+    return _s3
 
 
 def create_video_object_key(
@@ -42,8 +67,7 @@ async def create_s3_multipart_upload(
     object_key: str,
     content_type: str,
 ) -> str:
-    response = await asyncio.to_thread(
-        s3_client.create_multipart_upload,
+    response = await _client().create_multipart_upload(
         Bucket=settings.S3_BUCKET_NAME,
         Key=object_key,
         ContentType=content_type,
@@ -55,17 +79,20 @@ async def create_s3_multipart_upload(
 async def create_presigned_part_urls(
     *, object_key: str, s3_upload_id: str, parts: list[int]
 ) -> list[SignedPart]:
-    def _sign(part_num: int) -> SignedPart:
-        url = s3_client.generate_presigned_url(
-            "upload_part",
-            Params={
-                "Bucket": settings.S3_BUCKET_NAME,
-                "Key": object_key,
-                "UploadId": s3_upload_id,
-                "PartNumber": part_num,
-            },
-            ExpiresIn=3600,
+    s3 = _client()
+    return [
+        SignedPart(
+            part_number=part_num,
+            url=await s3.generate_presigned_url(
+                "upload_part",
+                Params={
+                    "Bucket": settings.S3_BUCKET_NAME,
+                    "Key": object_key,
+                    "UploadId": s3_upload_id,
+                    "PartNumber": part_num,
+                },
+                ExpiresIn=3600,
+            ),
         )
-        return SignedPart(part_number=part_num, url=url)
-
-    return await asyncio.to_thread(lambda: [_sign(num) for num in parts])
+        for part_num in parts
+    ]

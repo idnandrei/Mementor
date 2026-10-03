@@ -1,4 +1,3 @@
-from boto3 import session
 import uuid
 
 from fastapi import APIRouter, HTTPException, status

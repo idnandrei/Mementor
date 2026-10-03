@@ -8,11 +8,14 @@ from sqlalchemy.orm import Session
 from app.api.routes.main import api_router
 from app.core.config import settings
 from app.core.db import engine
+from app.s3 import close_s3, init_s3
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await init_s3()
     yield
+    await close_s3()
     await engine.dispose()
 
 
