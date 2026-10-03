@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import SessionDep
 from app.core.security import hash_password, verify_password
-from app.enums import UploadStatus
+from app.enums import UploadStatus, VideoStatus
 from app.models import Collection, CollectionVideo, User, Video, VideoUpload
 from app.schemas import UserCreate, VideoUploadRequest
 
@@ -222,3 +222,23 @@ async def get_video_upload_if_owned(
         )
     )
     return await session.scalar(stmt)
+
+
+async def mark_upload_completed(
+    *, session: SessionDep, video_upload: VideoUpload
+) -> VideoUpload:
+    video = await session.get(Video, video_upload.video_id)
+    now = func.now()
+    video = await session.get(Video, video_upload.video_id)
+    if video is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Video not found"
+        )
+    video_upload.status = UploadStatus.COMPLETED
+    video_upload.completed_at = now
+    video.status = VideoStatus.UPLOADED
+    video.uploaded_at = now
+
+    await session.commit()
+    await session.refresh(video_upload)
+    return video_upload

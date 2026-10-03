@@ -57,6 +57,30 @@ export type CollectionResponse = {
 };
 
 /**
+ * CompleteUploadRequest
+ */
+export type CompleteUploadRequest = {
+    /**
+     * Parts
+     */
+    parts: Array<CompletedPart>;
+};
+
+/**
+ * CompletedPart
+ */
+export type CompletedPart = {
+    /**
+     * Part Number
+     */
+    part_number: number;
+    /**
+     * Etag
+     */
+    etag: string;
+};
+
+/**
  * ErrorResponse
  */
 export type ErrorResponse = {
@@ -614,6 +638,40 @@ export type SignPartsResponses = {
 };
 
 export type SignPartsResponse2 = SignPartsResponses[keyof SignPartsResponses];
+
+export type CompleteUploadData = {
+    body: CompleteUploadRequest;
+    path: {
+        /**
+         * Video Id
+         */
+        video_id: string;
+        /**
+         * Upload Id
+         */
+        upload_id: string;
+    };
+    query?: never;
+    url: '/api/videos/{video_id}/uploads/{upload_id}/complete';
+};
+
+export type CompleteUploadErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CompleteUploadError = CompleteUploadErrors[keyof CompleteUploadErrors];
+
+export type CompleteUploadResponses = {
+    /**
+     * Successful Response
+     */
+    200: VideoUploadResponse;
+};
+
+export type CompleteUploadResponse = CompleteUploadResponses[keyof CompleteUploadResponses];
 
 export type GetCollectionsData = {
     body?: never;

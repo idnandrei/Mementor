@@ -3,8 +3,8 @@
 import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { createAccessToken, getCollections, getCollectionVideos, getCurrentUser, getUser, getVideo, getVideos, listUsers, login, logout, type Options, registerUser, signParts, uploadVideo } from '../sdk.gen';
-import type { CreateAccessTokenData, CreateAccessTokenError, CreateAccessTokenResponse, GetCollectionsData, GetCollectionsError, GetCollectionsResponse, GetCollectionVideosData, GetCollectionVideosError, GetCollectionVideosResponse, GetCurrentUserData, GetCurrentUserError, GetCurrentUserResponse, GetUserData, GetUserError, GetUserResponse, GetVideoData, GetVideoError, GetVideoResponse, GetVideosData, GetVideosError, GetVideosResponse, ListUsersData, ListUsersResponse, LoginData, LoginError, LoginResponse2, LogoutData, LogoutResponse, RegisterUserData, RegisterUserError, RegisterUserResponse, SignPartsData, SignPartsError, SignPartsResponse2, UploadVideoData, UploadVideoError, UploadVideoResponse } from '../types.gen';
+import { completeUpload, createAccessToken, getCollections, getCollectionVideos, getCurrentUser, getUser, getVideo, getVideos, listUsers, login, logout, type Options, registerUser, signParts, uploadVideo } from '../sdk.gen';
+import type { CompleteUploadData, CompleteUploadError, CompleteUploadResponse, CreateAccessTokenData, CreateAccessTokenError, CreateAccessTokenResponse, GetCollectionsData, GetCollectionsError, GetCollectionsResponse, GetCollectionVideosData, GetCollectionVideosError, GetCollectionVideosResponse, GetCurrentUserData, GetCurrentUserError, GetCurrentUserResponse, GetUserData, GetUserError, GetUserResponse, GetVideoData, GetVideoError, GetVideoResponse, GetVideosData, GetVideosError, GetVideosResponse, ListUsersData, ListUsersResponse, LoginData, LoginError, LoginResponse2, LogoutData, LogoutResponse, RegisterUserData, RegisterUserError, RegisterUserResponse, SignPartsData, SignPartsError, SignPartsResponse2, UploadVideoData, UploadVideoError, UploadVideoResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -274,6 +274,26 @@ export const signPartsMutation = (options?: Partial<Options<SignPartsData>>): Us
             return data;
         },
         mutationKey: signPartsMutationKey(options)
+    };
+    return mutationOptions;
+};
+
+export const completeUploadMutationKey = (options?: Partial<Options<CompleteUploadData>>) => createMutationKey('completeUpload', options);
+
+/**
+ * Complete Upload
+ */
+export const completeUploadMutation = (options?: Partial<Options<CompleteUploadData>>): UseMutationOptions<CompleteUploadResponse, CompleteUploadError, Options<CompleteUploadData>> => {
+    const mutationOptions: UseMutationOptions<CompleteUploadResponse, CompleteUploadError, Options<CompleteUploadData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await completeUpload({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        },
+        mutationKey: completeUploadMutationKey(options)
     };
     return mutationOptions;
 };

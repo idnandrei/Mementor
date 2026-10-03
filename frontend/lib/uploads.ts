@@ -1,4 +1,4 @@
-import { signParts } from "@/generated/api";
+import { completeUpload, signParts } from "@/generated/api";
 import { getFileExtension } from "@/lib/utils";
 
 export const PART_SIZE_BYTES = 16 * 1024 * 1024; // 16MB, 16,777,216
@@ -41,18 +41,23 @@ export async function startPartUpload(
     ranges.push(getPartRange(partNumber, file.size));
   }
 
-  const { data } = await signParts({
+  const { data: signed } = await signParts({
     path: { video_id: videoId, upload_id: uploadId },
     body: { part_numbers: Array.from({ length: partsNum }, (_, i) => i + 1) },
     throwOnError: true,
   });
-  for (const part of data.parts) {
+  for (const part of signed.parts) {
     const { start, end } = getPartRange(part.part_number, file.size);
     const chunk = file.slice(start, end);
     const etag = await uploadPart(part.url, chunk);
     completedParts.push({ part_number: part.part_number, etag });
   }
-  return completedParts;
+  const { data: completed } = await completeUpload({
+    path: { video_id: videoId, upload_id: uploadId },
+    body: { parts: completedParts },
+    throwOnError: true,
+  });
+  return completed;
 }
 
 export function uploadPart(url: string, chunk: Blob): Promise<string> {

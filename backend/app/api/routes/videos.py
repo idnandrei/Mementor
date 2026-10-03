@@ -2,6 +2,7 @@ import uuid
 
 from fastapi import APIRouter, HTTPException, status
 from sqlalchemy.orm import session
+from sqlalchemy.sql.functions import current_user
 
 from app import repo
 from app.api.deps import CurrentUser, SessionDep
@@ -13,13 +14,17 @@ from app.repo import (
     get_owned_collection_ids,
     get_video_upload_if_owned,
     link_video_collection,
+    mark_upload_completed,
 )
 from app.s3 import (
+    complete_s3_multipart_upload,
     create_presigned_part_urls,
     create_s3_multipart_upload,
     create_video_object_key,
 )
 from app.schemas import (
+    CompletedPart,
+    CompleteUploadRequest,
     SignPartsRequest,
     SignPartsResponse,
     VideoResponse,
@@ -157,3 +162,48 @@ async def sign_part_uploads(
     )
 
     return SignPartsResponse(parts=parts_response)
+
+
+@router.post(
+    "/{video_id}/uploads/{upload_id}/complete",
+    response_model=VideoUploadResponse,
+    operation_id="completeUpload",
+)
+async def complete_upload(
+    video_id: uuid.UUID,
+    upload_id: uuid.UUID,
+    body: CompleteUploadRequest,
+    session: SessionDep,
+    current_user: CurrentUser,
+):
+    video_upload = await get_video_upload_if_owned(
+        session=session,
+        owner_id=current_user.id,
+        video_id=video_id,
+        upload_id=upload_id,
+    )
+
+    if video_upload is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Video upload not found"
+        )
+    if video_upload.status != UploadStatus.INITIATED:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Video upload not in completable state",
+        )
+
+    await complete_s3_multipart_upload(
+        object_key=video_upload.object_key,
+        s3_upload_id=video_upload.s3_upload_id,
+        parts=body.parts,
+    )
+    video_upload = await mark_upload_completed(
+        session=session, video_upload=video_upload
+    )
+
+    return VideoUploadResponse(
+        video_id=video_id,
+        upload_id=video_upload.id,
+        status=video_upload.status,
+    )

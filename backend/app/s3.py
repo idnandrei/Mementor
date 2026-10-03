@@ -6,7 +6,7 @@ import aioboto3
 from aiobotocore.config import AioConfig
 
 from app.core.config import settings
-from app.schemas import SignedPart
+from app.schemas import CompletedPart, SignedPart
 
 ALLOWED_VIDEO_EXTENSIONS = {
     ".mp4",
@@ -96,3 +96,19 @@ async def create_presigned_part_urls(
         )
         for part_num in parts
     ]
+
+
+async def complete_s3_multipart_upload(
+    *, object_key: str, s3_upload_id, parts: list[CompletedPart]
+) -> None:
+    await _client().complete_multipart_upload(
+        Bucket=settings.S3_BUCKET_NAME,
+        Key=object_key,
+        UploadId=s3_upload_id,
+        MultipartUpload={
+            "Parts": [
+                {"PartNumber": p.part_number, "ETag": p.etag}
+                for p in sorted(parts, key=lambda p: p.part_number)
+            ]
+        },
+    )

@@ -103,3 +103,12 @@ class SignPartsResponse(BaseModel):
 
 class SignPartsRequest(BaseModel):
     part_numbers: list[int] = Field(min_length=1)
+
+
+class CompletedPart(BaseModel):
+    part_number: int
+    etag: str
+
+
+class CompleteUploadRequest(BaseModel):
+    parts: list[CompletedPart] = Field(min_length=1)
