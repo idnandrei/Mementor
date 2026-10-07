@@ -207,3 +207,48 @@ async def complete_upload(
         upload_id=video_upload.id,
         status=video_upload.status,
     )
+
+
+@router.post(
+    "/{video_id}/uploads/{upload_id}/abort",
+    response_model=VideoUploadResponse,
+    operation_id="abortUpload",
+)
+async def abort_upload(
+    video_id: uuid.UUID,
+    upload_id: uuid.UUID,
+    body: CompleteUploadRequest,
+    session: SessionDep,
+    current_user: CurrentUser,
+):
+    video_upload = await get_video_upload_if_owned(
+        session=session,
+        owner_id=current_user.id,
+        video_id=video_id,
+        upload_id=upload_id,
+    )
+
+    if video_upload is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Video upload not found"
+        )
+    if video_upload.status != UploadStatus.INITIATED:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Video upload not in completable state",
+        )
+
+    await complete_s3_multipart_upload(
+        object_key=video_upload.object_key,
+        s3_upload_id=video_upload.s3_upload_id,
+        parts=body.parts,
+    )
+    video_upload = await mark_upload_completed(
+        session=session, video_upload=video_upload
+    )
+
+    return VideoUploadResponse(
+        video_id=video_id,
+        upload_id=video_upload.id,
+        status=video_upload.status,
+    )

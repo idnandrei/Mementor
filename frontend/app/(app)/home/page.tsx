@@ -1,21 +1,23 @@
-import { Sparkles, Video } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
-import { LectureGrid } from "@/app/components/lecture-grid";
 import { Badge } from "@/app/components/ui/badge";
-import { getVideos } from "@/generated/api";
 import { createServerApiClient } from "@/lib/api/server";
+import { Metadata } from "next";
+import { AllVideos } from "@/app/components/all-videos";
+import { getQueryClient } from "@/lib/query-client";
+import { prefetchVideos } from "@/lib/api/prefetch";
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
+import { UploadingBanner } from "@/app/components/uploading-banner";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Home | Mementor",
   description: "Your learning workspace.",
 };
 
 export default async function HomePage() {
   const client = await createServerApiClient();
-  const { data: videos } = await getVideos({ client, throwOnError: true });
-  const pendingCount = videos.filter(
-    (video) => video.status === "pending_upload",
-  ).length;
+  const queryClient = getQueryClient();
+  await prefetchVideos(queryClient, client);
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-10 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
@@ -33,44 +35,20 @@ export default async function HomePage() {
           </p>
         </div>
       </section>
-
-      {pendingCount > 0 && (
-        <section
-          id="processing"
-          className="relative overflow-hidden rounded-4xl bg-primary px-6 py-6 text-primary-foreground shadow-lg shadow-primary/15 sm:px-8"
-        >
-          <div className="relative flex items-start gap-4">
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary-foreground/12">
-              <Video className="size-5" />
-            </span>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="font-heading text-base font-semibold">
-                  {pendingCount} {pendingCount === 1 ? "video is" : "videos are"} uploading
-                </h2>
-                <Badge className="bg-primary-foreground/14 text-primary-foreground">
-                  In progress
-                </Badge>
-              </div>
-              <p className="mt-1 text-sm text-primary-foreground/70">
-                They will become available in your library after their uploads finish.
-              </p>
-            </div>
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <UploadingBanner />
+        <section id="recent">
+          <div className="mb-5">
+            <h2 className="font-heading text-xl font-semibold tracking-tight">
+              Your videos
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Your latest uploaded and in-progress videos.
+            </p>
           </div>
+          <AllVideos limit={3} />
         </section>
-      )}
-
-      <section id="recent">
-        <div className="mb-5">
-          <h2 className="font-heading text-xl font-semibold tracking-tight">
-            Your videos
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Your latest uploaded and in-progress videos.
-          </p>
-        </div>
-        <LectureGrid videos={videos.slice(0, 6)} />
-      </section>
+      </HydrationBoundary>
     </div>
   );
 }

@@ -3,10 +3,12 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   getCollectionsOptions,
+  getVideosQueryKey,
   uploadVideoMutation,
 } from "@/generated/api/@tanstack/react-query.gen";
 import type { VideoUploadRequest } from "@/generated/api";
 import { useCallback, useState } from "react";
+import { usePathname } from "next/navigation";
 import { FileVideo, Upload, X } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
@@ -28,19 +30,16 @@ import {
 } from "@/app/components/ui/dialog";
 import { Input } from "@/app/components/ui/input";
 import { cn } from "@/lib/utils";
-import {
-  getPartCount,
-  getPartRange,
-  getVideoContentType,
-  startPartUpload,
-} from "@/lib/uploads";
+import { getVideoContentType, startPartUpload } from "@/lib/uploads";
 import { formatFileSize } from "@/lib/utils";
 import { titleFromFilename } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
 
 type UploadDialogProps = {
   label?: string;
   size?: "default" | "lg";
   className?: string;
+  iconOnlyOnMobile?: boolean;
 };
 
 type UploadErrorContent = {
@@ -69,7 +68,10 @@ export function UploadDialog({
   label = "Upload",
   size = "default",
   className,
+  iconOnlyOnMobile = false,
 }: UploadDialogProps) {
+  const pathname = usePathname();
+  const lockedCollectionId = pathname.match(/^\/collections\/([^/]+)/)?.[1];
   const [openDialog, setOpenDialog] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
@@ -77,6 +79,7 @@ export function UploadDialog({
     SelectedCollection[]
   >([]);
   const [fileError, setFileError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const chooseFile = useCallback((nextFile: File) => {
     setFile(nextFile);
@@ -153,8 +156,15 @@ export function UploadDialog({
       console.log(data.upload_id);
       console.log(data.status);
       if (file) {
-        console.log(startPartUpload(data.video_id, data.upload_id, file));
+        startPartUpload(data.video_id, data.upload_id, file)
+          .then(() => {
+            queryClient.invalidateQueries({ queryKey: getVideosQueryKey() });
+          })
+          .catch((error) => {
+            console.error(error);
+          });
       }
+      queryClient.invalidateQueries({ queryKey: getVideosQueryKey() });
       setOpenDialog(false);
       toast.success("Upload started", { description: title });
       resetUploadForm();
@@ -176,7 +186,9 @@ export function UploadDialog({
         file.type,
       ) as VideoUploadRequest["content_type"],
       size_bytes: file.size,
-      collection_ids: selectedCollections.map(({ id }) => id),
+      collection_ids: lockedCollectionId
+        ? [lockedCollectionId]
+        : selectedCollections.map(({ id }) => id),
     };
 
     upload.mutate({ body });
@@ -186,7 +198,9 @@ export function UploadDialog({
     <Dialog open={openDialog} onOpenChange={setOpenDialog}>
       <DialogTrigger render={<Button size={size} className={className} />}>
         <Upload data-icon="inline-start" />
-        {label}
+        <span className={cn(iconOnlyOnMobile && "sr-only sm:not-sr-only")}>
+          {label}
+        </span>
       </DialogTrigger>
 
       <DialogContent>
@@ -278,20 +292,31 @@ export function UploadDialog({
               You can change how this lecture appears in your library.
             </p>
           </div>
-          <div className="space-y-2">
-            <span className="text-sm font-medium">
-              Collections{" "}
-              <span className="text-muted-foreground">(optional)</span>
-            </span>
-            <CollectionPicker
-              collections={availableCollections}
-              value={selectedCollections}
-              onChange={setSelectedCollections}
-            />
-            <p className="text-xs text-muted-foreground">
-              Add this video to one or more collections.
+          {lockedCollectionId ? (
+            <p className="text-sm text-muted-foreground">
+              Uploading to:{" "}
+              <span className="font-medium text-foreground">
+                {availableCollections.find(
+                  (collection) => collection.id === lockedCollectionId,
+                )?.label ?? "this collection"}
+              </span>
             </p>
-          </div>
+          ) : (
+            <div className="space-y-2">
+              <span className="text-sm font-medium">
+                Collections{" "}
+                <span className="text-muted-foreground">(optional)</span>
+              </span>
+              <CollectionPicker
+                collections={availableCollections}
+                value={selectedCollections}
+                onChange={setSelectedCollections}
+              />
+              <p className="text-xs text-muted-foreground">
+                Add this video to one or more collections.
+              </p>
+            </div>
+          )}
         </div>
 
         <DialogFooter className="mt-7">

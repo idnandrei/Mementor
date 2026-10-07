@@ -24,7 +24,7 @@ export function AppHeader() {
         <Button variant="ghost" size="icon" aria-label="Notifications">
           <Bell />
         </Button>
-        <UploadDialog className="hidden sm:inline-flex" />
+        <UploadDialog iconOnlyOnMobile />
       </div>
     </header>
   );

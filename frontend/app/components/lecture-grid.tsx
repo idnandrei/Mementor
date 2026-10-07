@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { Clock3, LoaderCircle, Play, Search, UploadCloud } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -7,6 +8,7 @@ import { useMemo, useState } from "react";
 import { Badge } from "@/app/components/ui/badge";
 import { Input } from "@/app/components/ui/input";
 import { UploadDialog } from "@/app/components/upload-dialog";
+import { getVideosOptions } from "@/generated/api/@tanstack/react-query.gen";
 import type { VideoResponse } from "@/generated/api/types.gen";
 
 function formatAdded(value: string) {
@@ -25,7 +27,9 @@ function VideoThumbnail({ video }: { video: VideoResponse }) {
         <span className="relative flex size-12 items-center justify-center rounded-2xl bg-background text-primary shadow-sm">
           <LoaderCircle className="size-6 animate-spin" />
         </span>
-        <p className="relative mt-4 text-sm font-semibold">Upload in progress</p>
+        <p className="relative mt-4 text-sm font-semibold">
+          Upload in progress
+        </p>
         <p className="relative mt-1 text-xs text-muted-foreground">
           This video will be available when the upload finishes.
         </p>
@@ -50,24 +54,22 @@ export function LectureGrid({
   emptyTitle = "No videos yet",
   emptyDescription = "Upload a video to start building your library.",
   showCollectionBadges = true,
-  showEmptyUploadButton = false,
 }: {
   videos: VideoResponse[];
   emptyTitle?: string;
   emptyDescription?: string;
   showCollectionBadges?: boolean;
-  showEmptyUploadButton?: boolean;
 }) {
-  const [query, setQuery] = useState("");
+  const [search, setSearch] = useState("");
   const filtered = useMemo(() => {
-    const value = query.trim().toLowerCase();
+    const value = search.trim().toLowerCase();
     if (!value) return videos;
     return videos.filter((video) =>
       `${video.title} ${video.collection_names.join(" ")}`
         .toLowerCase()
         .includes(value),
     );
-  }, [videos, query]);
+  }, [videos, search]);
 
   if (!videos.length) {
     return (
@@ -75,16 +77,13 @@ export function LectureGrid({
         <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
           <UploadCloud className="size-6" />
         </span>
-        <h2 className="mt-4 font-heading text-lg font-semibold">{emptyTitle}</h2>
+        <h2 className="mt-4 font-heading text-lg font-semibold">
+          {emptyTitle}
+        </h2>
         <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
           {emptyDescription}
         </p>
-        {showEmptyUploadButton && (
-          <UploadDialog
-            label="Upload video"
-            className="mt-6"
-          />
-        )}
+        <UploadDialog label="Upload video" className="mt-6" />
       </section>
     );
   }
@@ -99,8 +98,8 @@ export function LectureGrid({
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
             placeholder="Search videos…"
             className="bg-muted/60 pl-9"
             aria-label="Search videos"
@@ -118,15 +117,16 @@ export function LectureGrid({
                   <h2 className="line-clamp-2 font-heading text-base font-semibold leading-snug tracking-tight group-hover:text-primary">
                     {video.title}
                   </h2>
-                  {showCollectionBadges && video.collection_names.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {video.collection_names.map((collectionName) => (
-                        <Badge key={collectionName} variant="secondary">
-                          {collectionName}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
+                  {showCollectionBadges &&
+                    video.collection_names.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {video.collection_names.map((collectionName) => (
+                          <Badge key={collectionName} variant="secondary">
+                            {collectionName}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                   <div className="mt-3 text-xs text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
                       <Clock3 className="size-3" />
@@ -154,7 +154,7 @@ export function LectureGrid({
         </div>
       ) : (
         <div className="rounded-3xl border border-dashed px-6 py-16 text-center text-sm text-muted-foreground">
-          No videos match “{query}”.
+          No videos match “{search}”.
         </div>
       )}
     </section>
